@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineering Demo - Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .diagram-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Engineering Demo - Architecture</h1>
+
+    <div class="diagram-container">
+        <h2>System Overview</h2>
+        <pre class="mermaid">
+flowchart TB
+    subgraph Client["Client Layer"]
+        WebUI["Web UI<br/>(localhost:8080)"]
+        REST["REST API Clients"]
+    end
+
+    subgraph Controllers["Controller Layer"]
+        ChatCtrl["ChatController<br/>/api/chat/*"]
+        DocCtrl["DocumentController<br/>/api/documents/*"]
+    end
+
+    subgraph Services["Service Layer"]
+        ChatSvc["ChatService"]
+        DocSvc["DocumentIngestionService"]
+    end
+
+    subgraph Config["Configuration"]
+        AiConfig["AiConfig<br/>(ChatClient Beans)"]
+    end
+
+    subgraph Tools["Tools"]
+        WeatherTool["WeatherTool<br/>@Tool annotated"]
+    end
+
+    subgraph External["External Services"]
+        LMStudio["LM Studio<br/>(localhost:1234)<br/>OpenAI-compatible API"]
+        OpenMeteo["Open-Meteo API<br/>(Weather Data)"]
+    end
+
+    subgraph Database["Database Layer"]
+        PGVector["PostgreSQL + PGvector<br/>(Docker)"]
+    end
+
+    WebUI --> ChatCtrl
+    WebUI --> DocCtrl
+    REST --> ChatCtrl
+    REST --> DocCtrl
+
+    ChatCtrl --> ChatSvc
+    DocCtrl --> DocSvc
+
+    ChatSvc --> AiConfig
+    AiConfig --> LMStudio
+
+    ChatSvc --> WeatherTool
+    WeatherTool --> OpenMeteo
+
+    DocSvc --> PGVector
+    AiConfig --> PGVector
+
+    style WebUI fill:#e3f2fd
+    style LMStudio fill:#fff3e0
+    style PGVector fill:#e8f5e9
+    style OpenMeteo fill:#fce4ec
+        </pre>
+    </div>
+
+    <div class="diagram-container">
+        <h2>RAG Flow (Document Q&A)</h2>
+        <pre class="mermaid">
+sequenceDiagram
+    participant User
+    participant ChatController
+    participant ChatService
+    participant ragChatClient
+    participant QuestionAnswerAdvisor
+    participant VectorStore
+    participant LMStudio
+
+    User->>ChatController: POST /api/chat/rag
+    ChatController->>ChatService: ragChat(message)
+    ChatService->>ragChatClient: prompt(message)
+    ragChatClient->>QuestionAnswerAdvisor: Apply advisor
+    QuestionAnswerAdvisor->>VectorStore: Search (topK=5)
+    VectorStore-->>QuestionAnswerAdvisor: Relevant documents
+    QuestionAnswerAdvisor->>LMStudio: Query + Context
+    LMStudio-->>ragChatClient: Generated response
+    ragChatClient-->>ChatService: Response content
+    ChatService-->>ChatController: ChatResponse
+    ChatController-->>User: JSON response
+        </pre>
+    </div>
+
+    <div class="diagram-container">
+        <h2>Tool Calling Flow (Weather)</h2>
+        <pre class="mermaid">
+sequenceDiagram
+    participant User
+    participant ChatController
+    participant ChatService
+    participant toolChatClient
+    participant WeatherTool
+    participant OpenMeteo
+
+    User->>ChatController: POST /api/chat/tools
+    ChatController->>ChatService: toolChat(message)
+    ChatService->>toolChatClient: prompt(message).tools(weatherTool)
+    toolChatClient->>toolChatClient: LLM decides to call tool
+    toolChatClient->>WeatherTool: getWeather(city)
+    WeatherTool->>OpenMeteo: HTTP request
+    OpenMeteo-->>WeatherTool: Weather data
+    WeatherTool-->>toolChatClient: Weather response
+    toolChatClient->>toolChatClient: LLM formats final response
+    toolChatClient-->>ChatService: Response content
+    ChatService-->>ChatController: ChatResponse
+    ChatController-->>User: JSON response
+        </pre>
+    </div>
+
+    <div class="diagram-container">
+        <h2>Document Ingestion Flow</h2>
+        <pre class="mermaid">
+sequenceDiagram
+    participant User
+    participant DocumentController
+    participant DocumentIngestionService
+    participant TikaDocumentReader
+    participant TokenTextSplitter
+    participant VectorStore
+    participant LMStudio
+
+    User->>DocumentController: POST /api/documents/upload
+    DocumentController->>DocumentIngestionService: ingestDocument(file)
+    DocumentIngestionService->>TikaDocumentReader: Read document
+    TikaDocumentReader-->>DocumentIngestionService: Raw document
+    DocumentIngestionService->>TokenTextSplitter: Split into chunks
+    TokenTextSplitter-->>DocumentIngestionService: Document chunks
+    loop For each chunk
+        DocumentIngestionService->>LMStudio: Generate embedding
+        LMStudio-->>DocumentIngestionService: 384-dim vector
+        DocumentIngestionService->>VectorStore: Store chunk + vector
+    end
+    VectorStore-->>DocumentIngestionService: Success
+    DocumentIngestionService-->>DocumentController: Upload result
+    DocumentController-->>User: DocumentUploadResponse
+        </pre>
+    </div>
+
+    <div class="diagram-container">
+        <h2>Component Architecture</h2>
+        <pre class="mermaid">
+classDiagram
+    class ChatController {
+        +ragChat(ChatRequest) ChatResponse
+        +toolChat(ChatRequest) ChatResponse
+    }
+
+    class DocumentController {
+        +uploadDocument(MultipartFile) DocumentUploadResponse
+        +listDocuments() List~Document~
+        +clearDocuments() void
+    }
+
+    class ChatService {
+        -ChatClient ragChatClient
+        -ChatClient toolChatClient
+        -WeatherTool weatherTool
+        +ragChat(String) String
+        +toolChat(String) String
+    }
+
+    class DocumentIngestionService {
+        -VectorStore vectorStore
+        +ingestDocument(MultipartFile) void
+    }
+
+    class AiConfig {
+        +ragChatClient() ChatClient
+        +toolChatClient() ChatClient
+    }
+
+    class WeatherTool {
+        +getWeather(String city) String
+    }
+
+    class ChatRequest {
+        +String message
+    }
+
+    class ChatResponse {
+        +String response
+    }
+
+    ChatController --> ChatService
+    DocumentController --> DocumentIngestionService
+    ChatService --> AiConfig : uses beans
+    ChatService --> WeatherTool
+    ChatController ..> ChatRequest
+    ChatController ..> ChatResponse
+        </pre>
+    </div>
+
+    <div class="diagram-container">
+        <h2>Technology Stack</h2>
+        <pre class="mermaid">
+flowchart LR
+    subgraph Backend["Backend (Java 21)"]
+        SpringBoot["Spring Boot 3.5.9"]
+        SpringAI["Spring AI 1.1.2"]
+    end
+
+    subgraph AI["AI/ML"]
+        LMS["LM Studio"]
+        ChatModel["Chat Model<br/>granite-4-h-tiny"]
+        EmbedModel["Embedding Model<br/>granite-embedding-107m"]
+    end
+
+    subgraph Storage["Storage"]
+        PG["PostgreSQL"]
+        PGV["PGvector Extension"]
+        HNSW["HNSW Index<br/>COSINE_DISTANCE"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        Docker["Docker Compose"]
+        Maven["Maven"]
+    end
+
+    SpringBoot --> SpringAI
+    SpringAI --> LMS
+    LMS --> ChatModel
+    LMS --> EmbedModel
+    SpringAI --> PG
+    PG --> PGV
+    PGV --> HNSW
+    Docker --> PG
+
+    style SpringBoot fill:#6db33f,color:#fff
+    style SpringAI fill:#6db33f,color:#fff
+    style LMS fill:#ff6b6b,color:#fff
+    style PG fill:#336791,color:#fff
+        </pre>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            sequence: {
+                useMaxWidth: true
+            }
+        });
+    </script>
+</body>
+</html>
