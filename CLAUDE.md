@@ -95,3 +95,7 @@ Key settings in `application.properties`:
 - LM Studio running on `localhost:1234` with a model loaded (must support embeddings)
 
 **Weather tool supported cities**: New York, London, Tokyo, Paris, Sydney, Dubai, Singapore, Berlin, Los Angeles, San Francisco
+
+## Git Conventions
+
+- Use conventional commits when crafting commit messages (e.g., `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`)
