@@ -35,3 +35,6 @@ build/
 ### Project specific ###
 .gitattributes
 .playwright-mcp/
+
+### Mac OS
+.DS_Store
