@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI Engineering Demo - a Spring Boot 3.5.9 application demonstrating Spring AI 1.1.2 integration with LM Studio (local LLM) and PGvector vector database. Features RAG (document Q&A) and tool calling (weather API). Uses Java 21 and Maven.
+AI Engineering Demo - a Spring Boot 4.1.0 application demonstrating Spring AI 2.0.0 integration with LM Studio (local LLM) and PGvector vector database. Features RAG (document Q&A) and tool calling (weather API). Uses Java 21 and Maven.
 
 ## Build & Run Commands
 
@@ -82,8 +82,8 @@ Web UI available at `http://localhost:8080`
 ## Configuration
 
 Key settings in `application.properties`:
-- LM Studio endpoint: `localhost:1234` (OpenAI-compatible API)
-- Chat model: `ibm/granite-4-h-tiny`
+- LM Studio endpoint: `localhost:1234/v1` (OpenAI-compatible API; Spring AI 2.0.0's OpenAI client requires the `/v1` path)
+- Chat model: `google/gemma-4-e4b`
 - Embedding model: `text-embedding-granite-embedding-107m-multilingual`
 - PGvector dimensions: `384` (must match embedding model output)
 - Vector similarity: COSINE_DISTANCE with HNSW index
