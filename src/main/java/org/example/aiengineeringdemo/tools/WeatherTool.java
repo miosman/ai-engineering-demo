@@ -1,7 +1,7 @@
 package org.example.aiengineeringdemo.tools;
 
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import java.util.Map;
 public class WeatherTool {
 
     private final RestClient restClient;
-    private final JsonMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     private static final Map<String, double[]> CITY_COORDINATES = Map.of(
         "new york", new double[]{40.7128, -74.0060},
@@ -28,7 +28,7 @@ public class WeatherTool {
         "san francisco", new double[]{37.7749, -122.4194}
     );
 
-    public WeatherTool(RestClient.Builder restClientBuilder, JsonMapper objectMapper) {
+    public WeatherTool(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
         this.restClient = restClientBuilder
             .baseUrl("https://api.open-meteo.com/v1")
             .build();

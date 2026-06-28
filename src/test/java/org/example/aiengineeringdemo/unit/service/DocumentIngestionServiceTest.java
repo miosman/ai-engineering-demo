@@ -67,7 +67,9 @@ class DocumentIngestionServiceTest {
     }
 
     @Test
-    void clearAllDocuments_emptiesFilenameList() throws Exception {
+    void clearAllDocuments_emptiesInMemoryFilenameTracker() throws Exception {
+        // Note: clearAllDocuments() only clears the in-memory filename tracker.
+        // Embedded chunks in the VectorStore are NOT removed.
         service.ingestDocument(new MockMultipartFile(
             "file", "a.txt", "text/plain", "content a".getBytes()
         ));
