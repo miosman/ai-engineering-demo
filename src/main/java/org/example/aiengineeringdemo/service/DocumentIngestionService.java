@@ -27,17 +27,7 @@ public class DocumentIngestionService {
 
     public int ingestDocument(MultipartFile file) {
         try {
-            InputStreamResource resource = new InputStreamResource(file.getInputStream());
-            TikaDocumentReader reader = new TikaDocumentReader(resource);
-
-            List<Document> documents = reader.read();
-
-            documents.forEach(doc ->
-                doc.getMetadata().putAll(Map.of(
-                    "filename", file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown",
-                    "contentType", file.getContentType() != null ? file.getContentType() : "unknown"
-                ))
-            );
+            List<Document> documents = getDocuments(file);
 
             List<Document> chunks = textSplitter.split(documents);
             vectorStore.add(chunks);
@@ -47,6 +37,21 @@ public class DocumentIngestionService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to process document: " + e.getMessage(), e);
         }
+    }
+
+    private static List<Document> getDocuments(MultipartFile file) throws IOException {
+        InputStreamResource resource = new InputStreamResource(file.getInputStream());
+        TikaDocumentReader reader = new TikaDocumentReader(resource);
+
+        List<Document> documents = reader.read();
+
+        documents.forEach(doc ->
+            doc.getMetadata().putAll(Map.of(
+                "filename", file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown",
+                "contentType", file.getContentType() != null ? file.getContentType() : "unknown"
+            ))
+        );
+        return documents;
     }
 
     public List<String> listDocuments() {
