@@ -1,6 +1,6 @@
 package org.example.aiengineeringdemo.unit.tools;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.example.aiengineeringdemo.tools.WeatherTool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ class WeatherToolTest {
         lenient().when(requestSpec.retrieve()).thenReturn(responseSpec);
         lenient().when(responseSpec.body(String.class)).thenReturn(WEATHER_JSON);
 
-        weatherTool = new WeatherTool(restClientBuilder, new ObjectMapper());
+        weatherTool = new WeatherTool(restClientBuilder, JsonMapper.builder().build());
     }
 
     @Test
