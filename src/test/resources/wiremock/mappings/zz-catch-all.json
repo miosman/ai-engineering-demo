@@ -1,0 +1,16 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "ANY",
+    "urlPattern": ".*"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "error": "Unexpected endpoint or method."
+    }
+  }
+}
