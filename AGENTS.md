@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to OpenAI Codex when working with code in this repository.
 
 ## Project Overview
 
@@ -123,4 +123,4 @@ Gotchas:
 ## Git Conventions
 
 - Use conventional commits when crafting commit messages (e.g., `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`)
-- `AGENTS.md` at the repo root is a copy of this file for Codex; keep the two in sync when editing either.
+- `CLAUDE.md` at the repo root is a copy of this file for Claude Code; keep the two in sync when editing either.

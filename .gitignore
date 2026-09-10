@@ -33,6 +33,8 @@ build/
 .vscode/
 
 ### Project specific ###
+*.swp
+*.swo
 .gitattributes
 .playwright-mcp/
 
